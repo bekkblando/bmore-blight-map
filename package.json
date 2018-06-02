@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "makemap": "bash -x prepublish.sh"
+    "mexico": "bash -x mexico.sh",
+    "bmore": "bash -x bmore.sh"
   },
   "devDependencies": {
     "d3-geo": "^1.6.4",

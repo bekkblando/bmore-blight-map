@@ -1,13 +1,9 @@
 var path = d3.geoPath();
 
-d3.json("mx.json", function(error, mx) {
+d3.json("bmore.json", function(error, bmore) {
   if (error) throw error;
 
-  d3.select("#municipalities")
-      .datum(topojson.feature(mx, mx.objects.municipalities))
-      .attr("d", path);
-
   d3.select("#states")
-      .datum(topojson.feature(mx, mx.objects.states))
+      .datum(topojson.feature(bmore, bmore.objects.states))
       .attr("d", path);
 });

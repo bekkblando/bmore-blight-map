@@ -3,15 +3,13 @@
 mkdir -p build
 
 # Download.
-curl -z build/estados.zip -o build/estados.zip http://mapserver.inegi.org.mx/MGN/mge2010v5_0.zip
-curl -z build/municipios.zip -o build/municipios.zip http://mapserver.inegi.org.mx/MGN/mgm2010v5_0.zip
+curl -z build/baltimore.zip -o build/baltimore.zip https://bniajfi.org/wp-content/uploads/2014/04/csa_2010_boundaries.zip
 
 # Decompress.
-unzip -od build build/estados.zip
-unzip -od build build/municipios.zip
+unzip -od build build/baltimore.zip
 
 # Compute the scale and translate for 960×600 inset by 10px.
-TRANSFORM=$(shp2json build/Entidades_2010_5.shp \
+TRANSFORM=$(shp2json build/CSA_NSA_Tracts.shp \
   | ndjson-map -r d3=d3-geo 'p = d3.geoIdentity().reflectY(true).fitExtent([[10, 10], [960 - 10, 600 - 10]], d), "d3.geoIdentity().reflectY(true).scale(" + p.scale() + ").translate([" + p.translate() + "])"' \
   | tr -d '"')
 
@@ -22,12 +20,8 @@ TRANSFORM=$(shp2json build/Entidades_2010_5.shp \
 # toposimplify - simplify TopoJSON.
 # topoquantize - quantize TopoJSON.
 geo2topo -n \
-  states=<(shp2json -n build/Entidades_2010_5.shp \
-    | ndjson-map 'd.properties = {state_code: +d.properties.CVE_ENT, state_name: d.properties.NOM_ENT}, d' \
-    | geoproject -n ${TRANSFORM}) \
-  municipalities=<(shp2json -n build/Municipios_2010_5.shp \
-    | ndjson-map 'd.properties = {state_code: +d.properties.CVE_ENT, mun_code: +d.properties.CVE_MUN, mun_name: d.properties.NOM_MUN}, d' \
+  states=<(shp2json -n build/CSA_NSA_Tracts.shp \
     | geoproject -n ${TRANSFORM}) \
   | toposimplify -p 1 \
   | topoquantize 1e5 \
-  > mx.json
+  > bmore.json
