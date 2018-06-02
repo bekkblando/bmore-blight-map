@@ -29,14 +29,10 @@ $('#demolitionC').change(() => {
           "$$app_token" : "eBYEhO8U5MV3A40adxqkH4JRq"
         }
     }).done(function(data) {
-      d3.select("svg").append("path")
-     .datum(data)
-     .attr("d", path)
-     .attr("id", "demolition")
-     .style("fill", "red")
-
+     addDataToMap(data, "demolition", "brown")
     });
   }else{
+    console.log("Remove Demolition")
     $("#demolition").remove()
   }
 });
@@ -50,20 +46,67 @@ $('#vacencyC').change(() => {
           "$$app_token" : "eBYEhO8U5MV3A40adxqkH4JRq"
         }
     }).done(function(data) {
-        console.log("Vacency Data: ", data)
-        d3.select("svg").append("path")
-       .datum(data)
-       .attr("d", path)
-       .attr("id", "vacency")
-       .style("fill", "blue")
+        addDataToMap(data, "vacency", "blue")
     });
   }else{
     $("#vacency").remove()
   }
 });
 
+
+$('#crimeC').change(() => {
+  if($("#crimeC").is(":checked")){
+    console.log(buildURL("https://data.baltimorecity.gov/resource/4ih5-d5d5.geojson","crimetime"))
+    $.ajax({
+        url: buildURL("https://data.baltimorecity.gov/resource/m8g9-abgb.geojson","crimetime"),
+        type: "GET",
+        data: {
+          "$$app_token" : "eBYEhO8U5MV3A40adxqkH4JRq"
+        }
+    }).done(function(data) {
+        console.log("Crime Data: ", data)
+        addDataToMap(data, "crime", "red")
+    });
+  }else{
+    $("#crime").remove()
+  }
+});
+
+
+
+
+$('#foodC').change(() => {
+  if($("#foodC").is(":checked")){
+    $.ajax({
+        url: buildURL("https://data.baltimorecity.gov/resource/8gms-s9we.geojson", ""),
+        type: "GET",
+        data: {
+          "$$app_token" : "eBYEhO8U5MV3A40adxqkH4JRq"
+        }
+    }).done(function(data) {
+        console.log(data)
+        addDataToMap(data, "food", "green")
+    });
+  }else{
+    $("#food").remove()
+  }
+});
+
+function addDataToMap(data, id, color){
+  d3.select("#map").append("path")
+   .datum(data)
+   .attr("d", path)
+   .attr("id", id)
+   .attr("r", 5.1)
+   .style("fill", color)
+}
+
 function buildURL(baseURL, dateKey){
-  return `${baseURL}?$where=${dateKey}>"${getBeginDate()}" AND ${dateKey}<"${getEndDate()}"&$order=${dateKey} DESC`
+  if(dateKey != "")
+    return `${baseURL}?$where=${dateKey}>"${getBeginDate()}" AND ${dateKey}<"${getEndDate()}"&$order=${dateKey} DESC&$limit=5000`;
+  else
+    return `${baseURL}?$limit=10000`;
+
 }
 
 function getBeginDate(){
@@ -72,4 +115,19 @@ function getBeginDate(){
 
 function getEndDate(){
   return M.Datepicker.getInstance(document.querySelector('#end')).toString('yyyy-mm-dd')
+}
+
+function getVacantHousesInNeighborhood(data) {
+  let dictionary = {};
+  data["features"].forEach(datum => {
+    if (dictionary[datum['properties']['neighborhood']])
+      dictionary[datum['properties']['neighborhood']]++;
+    else
+      dictionary[datum['properties']['neighborhood']] = 1;
+  });
+  return dictionary;
+}
+
+function outputProportion(data){
+
 }
