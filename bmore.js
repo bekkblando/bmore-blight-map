@@ -128,10 +128,19 @@ function render() {
       .attr("d", path)
       .on("mouseover", function(d){
         d3.select(this).attr("fill", "orange");
-        console.log("IN: " + d.properties.Community); console.log(d);})
-      .on("mouseout", function(d){
+        console.log("IN: " + d.properties.Name); console.log(d);
+
+        var dict = data.reduce(function(dict, dot){
+          if(dot.properties.neighborhood.toLowerCase() === d.properties.Name.toLowerCase()){
+            dict[dot.id] = dict[dot.id] === undefined ? 1 : dict[dot.id]+1;
+          }
+          return dict;
+        }, {});
+
+        console.log(dict);
+      }).on("mouseout", function(d){
         d3.select(this).attr("fill", "none");
-        console.log("OUT: " + d.properties.Community);
+        console.log("OUT: " + d.properties.Name);
       });
 
 
@@ -190,7 +199,7 @@ function outputProportion(data, header){
       url: `https://data.baltimorecity.gov/resource/piqw-tyem.json?csa2010=#{key}`,
       type: "GET"
     }).done((data) => {
-      console.log(data)
+      // console.log(data)
       $('proportions').append(`<tr><td>${key}</td><td>${(vacantHouses[key]/data["shomes12"])*100}</td></tr>`);
     });
   });
