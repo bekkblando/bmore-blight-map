@@ -1,5 +1,8 @@
-
+.neighborhood {
+  pointer-events:all;
+}
 .point {
   stroke:none;
   mix-blend-mode: multiply;
+  pointer-events: none;
 }

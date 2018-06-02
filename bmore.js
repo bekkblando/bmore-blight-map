@@ -126,15 +126,13 @@ function render() {
       .append("path")
       .attr("class", "neighborhood")
       .attr("d", path)
-      // .on("mouseover", function(d){
-      //   d3.select(this).attr("fill", "orange");
-      //   console.log("IN: " + d.properties.Community); console.log(d);})
-      // .on("mouseout", function(d){
-      //   // d3.select(this).attr({
-      //   //   fill: "none"
-      //   // });
-      //   console.log("OUT: " + d.properties.Community);
-      // });
+      .on("mouseover", function(d){
+        d3.select(this).attr("fill", "orange");
+        console.log("IN: " + d.properties.Community); console.log(d);})
+      .on("mouseout", function(d){
+        d3.select(this).attr("fill", "none");
+        console.log("OUT: " + d.properties.Community);
+      });
 
 
 
