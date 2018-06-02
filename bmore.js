@@ -11,11 +11,11 @@ M.Datepicker.getInstance(document.getElementById('begin')).setDate(new Date(2007
 M.Datepicker.getInstance(document.getElementById('end')).setDate(new Date(2008, 0, 1));
 
 var neighborhoods = [];
-d3.json("bmore.json", function (error, bmore) {
+d3.json("https://gis-baltimore.opendata.arcgis.com/datasets/1ca93e68f11541d4b59a63243725c4b7_0.geojson", function (error, bmore) {
   if (error) throw error;
 
-  neighborhoods = topojson.feature(bmore, bmore.objects.neighborhoods);
-  projection.fitSize([960, 600], neighborhoods);
+  neighborhoods = bmore.features;
+  projection.fitSize([960, 600], bmore);
   render();
 
 });
@@ -120,7 +120,7 @@ function removeDataFromMap(id){
 function render() {
   var mapDataJoin = d3.select("#neighborhoods")
     .selectAll('.neighborhood')
-    .data(neighborhoods.features);
+    .data(neighborhoods);
 
     mapDataJoin.enter()
       .append("path")
