@@ -4,6 +4,9 @@ var projection = d3.geoMercator(),
 
 M.AutoInit();
 
+M.Datepicker.getInstance(document.getElementById('begin')).setDate(new Date(2007,0,1));
+M.Datepicker.getInstance(document.getElementById('end')).setDate(new Date(2008,0,1));
+
 d3.json("bmore.json", function(error, bmore) {
   if (error) throw error;
 
@@ -16,7 +19,6 @@ d3.json("bmore.json", function(error, bmore) {
       .attr("d", path);
 
 });
-
 
 // Get the demolition based off the dates if the checkbox is checked
 $('#demolitionC').change(() => {
@@ -72,9 +74,6 @@ $('#crimeC').change(() => {
   }
 });
 
-
-
-
 $('#foodC').change(() => {
   if($("#foodC").is(":checked")){
     $.ajax({
@@ -93,12 +92,27 @@ $('#foodC').change(() => {
 });
 
 function addDataToMap(data, id, color){
-  d3.select("#map").append("path")
-   .datum(data)
-   .attr("d", path)
-   .attr("id", id)
-   .attr("r", 5.1)
-   .style("fill", color)
+  console.log(data);
+  console.log(projection);
+
+  var map = d3.select("#map");
+  map
+      .selectAll(".point")
+      .data(data.features)
+    .enter()
+      .append("circle")
+      .attr("class", "point")
+      .attr("r", 5)
+      .attr("cx", function(d){ return projection(d.geometry.coordinates)[0]; })
+      .attr("cy", function(d){ return projection(d.geometry.coordinates)[1]; })
+      .style("fill", "rgb(240,0,0)");
+      // <circle class="point" x="200" y="300" r="2"></circle>
+  // map.append("path")
+  //  .datum(data)
+  //  .attr("d", path)
+  //  .attr("id", id)
+  //  .attr("r", 5.1)
+  //  .style("fill", color)
 }
 
 function buildURL(baseURL, dateKey){
