@@ -62,8 +62,8 @@ $('#demolitionC').change(() => {
   }
 });
 
-$('#vacencyC').change(() => {
-  if ($("#vacencyC").is(":checked")) {
+$('#vacancyC').change(() => {
+  if ($("#vacancyC").is(":checked")) {
     $.ajax({
       url: buildURL("https://data.baltimorecity.gov/resource/rw5h-nvv4.geojson", "noticedate"),
       type: "GET",
@@ -71,11 +71,11 @@ $('#vacencyC').change(() => {
         "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
       }
     }).done(function (data) {
-      addDataToMap(data, "vacency", "blue")
+      addDataToMap(data, "vacancy", "blue")
       outputProportion(data, "Percentage of Houses Vacant")
     });
   } else {
-    removeDataFromMap("vacency");
+    removeDataFromMap("vacancy");
   }
 });
 
