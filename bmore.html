@@ -1,24 +1,58 @@
 <!DOCTYPE html>
 <html>
+<!-- Compiled and minified CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 
 <head>
   <title>Fight Blight</title>
 </head>
 
 <body>
-    <svg width="960" height="600" fill="none" stroke="#333">
-        <path id="neighborhoods"></path>
-        
-      </svg>
-      <script src="https://unpkg.com/d3-array@1"></script>
-      <script src="https://unpkg.com/d3-collection@1"></script>
-      <script src="https://unpkg.com/d3-dispatch@1"></script>
-      <script src="https://unpkg.com/d3-request@1"></script>
-      <script src="https://unpkg.com/d3-selection@1"></script>
-      <script src="https://unpkg.com/d3-geo@1"></script>
-      <script src="https://unpkg.com/topojson-client@3"></script>
-      <script src="bmore.js"></script>
+    <div class="container">
+      <div class="row">
+        <div class="col s4">
+          <input name="beginYear" type="year"/>
+          <input name="beginMonth" type="month"/>
+
+          <input name="endYear" type="year"/>
+          <input name="endMonth" type="month"/>
+        </div>
+        <div class="col s4">
+          Toggle Switches
+            <label><input name="vacency" type="checkbox"/><span>Vacency</span></label>
+            <label><input name="demolition" type="checkbox"/><span>Demolition</span></label>
+            <label><input name="crime" type="checkbox"/><span>Crime</span></label>
+        </div>
+        <div class="col s4">
+          key
+        </div>
+      </div>
+      <div class="row">
+        <div class="col s12">
+          <svg width="960" height="600" fill="none" stroke="#333">
+              <path id="neighborhoods"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
 
 </body>
+
+<foot>
+  <!-- Compiled and minified JavaScript -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+  <script src="https://unpkg.com/d3-array@1"></script>
+  <script src="https://unpkg.com/d3-collection@1"></script>
+  <script src="https://unpkg.com/d3-dispatch@1"></script>
+  <script src="https://unpkg.com/d3-request@1"></script>
+  <script src="https://unpkg.com/d3-selection@1"></script>
+  <script src="https://unpkg.com/d3-geo@1"></script>
+  <script src="https://unpkg.com/topojson-client@3"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/js/materialize.min.js"></script>
+  <script src="bmore.js"></script>
+</foot>
 
 </html>
