@@ -1,13 +1,16 @@
+(function () { var script = document.createElement('script'); script.onload = function () { var stats = new Stats(); document.body.appendChild(stats.dom); requestAnimationFrame(function loop() { stats.update(); requestAnimationFrame(loop) }); }; script.src = '//rawgit.com/mrdoob/stats.js/master/build/stats.min.js'; document.head.appendChild(script); })()
+
+
 var projection = d3.geoMercator(),
-    path = d3.geoPath(projection);
+  path = d3.geoPath(projection);
 
 
 M.AutoInit();
 
-M.Datepicker.getInstance(document.getElementById('begin')).setDate(new Date(2007,0,1));
-M.Datepicker.getInstance(document.getElementById('end')).setDate(new Date(2008,0,1));
+M.Datepicker.getInstance(document.getElementById('begin')).setDate(new Date(2007, 0, 1));
+M.Datepicker.getInstance(document.getElementById('end')).setDate(new Date(2008, 0, 1));
 
-d3.json("bmore.json", function(error, bmore) {
+d3.json("bmore.json", function (error, bmore) {
   if (error) throw error;
 
   var neighborhoods = topojson.feature(bmore, bmore.objects.neighborhoods);
@@ -15,119 +18,129 @@ d3.json("bmore.json", function(error, bmore) {
   projection.fitSize([960, 600], neighborhoods);
 
   d3.select("#neighborhoods")
-      .datum(neighborhoods)
-      .attr("d", path);
+    .datum(neighborhoods)
+    .attr("d", path);
 
 });
 
 // Get the demolition based off the dates if the checkbox is checked
 $('#demolitionC').change(() => {
-  if($('#demolitionC').is(":checked")) {
+  if ($('#demolitionC').is(":checked")) {
     console.log(buildURL("https://data.baltimorecity.gov/resource/9t78-k3wf.geojson", "dateissue"))
     $.ajax({
-        url: buildURL("https://data.baltimorecity.gov/resource/9t78-k3wf.geojson", "dateissue"),
-        type: "GET",
-        data: {
-          "$$app_token" : "eBYEhO8U5MV3A40adxqkH4JRq"
-        }
-    }).done(function(data) {
-     addDataToMap(data, "demolition", "brown")
+      url: buildURL("https://data.baltimorecity.gov/resource/9t78-k3wf.geojson", "dateissue"),
+      type: "GET",
+      data: {
+        "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
+      }
+    }).done(function (data) {
+      addDataToMap(data, "demolition", "brown")
     });
-  }else{
+  } else {
     console.log("Remove Demolition")
-    $("#demolition").remove()
+    removeDataFromMap("demolition");
   }
 });
 
 $('#vacencyC').change(() => {
-  if($("#vacencyC").is(":checked")){
+  if ($("#vacencyC").is(":checked")) {
     $.ajax({
-        url: buildURL("https://data.baltimorecity.gov/resource/rw5h-nvv4.geojson","noticedate"),
-        type: "GET",
-        data: {
-          "$$app_token" : "eBYEhO8U5MV3A40adxqkH4JRq"
-        }
-    }).done(function(data) {
-        addDataToMap(data, "vacency", "blue")
+      url: buildURL("https://data.baltimorecity.gov/resource/rw5h-nvv4.geojson", "noticedate"),
+      type: "GET",
+      data: {
+        "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
+      }
+    }).done(function (data) {
+      addDataToMap(data, "vacency", "blue")
     });
-  }else{
-    $("#vacency").remove()
+  } else {
+    removeDataFromMap("vacency");
   }
 });
 
 
 $('#crimeC').change(() => {
-  if($("#crimeC").is(":checked")){
-    console.log(buildURL("https://data.baltimorecity.gov/resource/4ih5-d5d5.geojson","crimetime"))
+  if ($("#crimeC").is(":checked")) {
+    console.log(buildURL("https://data.baltimorecity.gov/resource/4ih5-d5d5.geojson", "crimetime"))
     $.ajax({
-        url: buildURL("https://data.baltimorecity.gov/resource/m8g9-abgb.geojson","crimetime"),
-        type: "GET",
-        data: {
-          "$$app_token" : "eBYEhO8U5MV3A40adxqkH4JRq"
-        }
-    }).done(function(data) {
-        console.log("Crime Data: ", data)
-        addDataToMap(data, "crime", "red")
+      url: buildURL("https://data.baltimorecity.gov/resource/m8g9-abgb.geojson", "crimetime"),
+      type: "GET",
+      data: {
+        "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
+      }
+    }).done(function (data) {
+      console.log("Crime Data: ", data)
+      addDataToMap(data, "crime", "red")
     });
-  }else{
-    $("#crime").remove()
+  } else {
+    removeDataFromMap("crime");
   }
 });
 
 $('#foodC').change(() => {
-  if($("#foodC").is(":checked")){
+  if ($("#foodC").is(":checked")) {
     $.ajax({
-        url: buildURL("https://data.baltimorecity.gov/resource/8gms-s9we.geojson", ""),
-        type: "GET",
-        data: {
-          "$$app_token" : "eBYEhO8U5MV3A40adxqkH4JRq"
-        }
-    }).done(function(data) {
-        console.log(data)
-        addDataToMap(data, "food", "green")
+      url: buildURL("https://data.baltimorecity.gov/resource/8gms-s9we.geojson", ""),
+      type: "GET",
+      data: {
+        "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
+      }
+    }).done(function (data) {
+      console.log(data)
+      addDataToMap(data, "food", "green")
     });
-  }else{
+  } else {
     $("#food").remove()
   }
 });
 
-function addDataToMap(data, id, color){
-  console.log(data);
-  console.log(projection);
+var data = [];
 
-  var map = d3.select("#map");
-  map
-      .selectAll(".point")
-      .data(data.features)
-    .enter()
-      .append("circle")
-      .attr("class", "point")
-      .attr("r", 5)
-      .attr("cx", function(d){ return projection(d.geometry.coordinates)[0]; })
-      .attr("cy", function(d){ return projection(d.geometry.coordinates)[1]; })
-      .style("fill", "rgb(240,0,0)");
-      // <circle class="point" x="200" y="300" r="2"></circle>
-  // map.append("path")
-  //  .datum(data)
-  //  .attr("d", path)
-  //  .attr("id", id)
-  //  .attr("r", 5.1)
-  //  .style("fill", color)
+function addDataToMap(newData, id, color) {
+  var newFeatures = newData.features
+    .map(function (d) { d.id = id; d.color = color; return d; })
+    .filter(function (d) { return !!d.geometry; });
+  data = data.concat(newFeatures);
+  renderData();
 }
 
-function buildURL(baseURL, dateKey){
-  if(dateKey != "")
+function removeDataFromMap(id){
+  data = data.filter(d => d.id !== id);
+  renderData();
+}
+
+function renderData() {
+
+
+  var dataJoin = d3.select("#map")
+    .selectAll(".point")
+    .data(data);
+
+  dataJoin.enter()
+    .append("circle")
+    .attr("class", "point")
+    .style("fill", d => d.color)
+    .attr("cx", d => projection(d.geometry.coordinates)[0])
+    .attr("cy", d => projection(d.geometry.coordinates)[1])
+    .attr("r", 5);
+
+  dataJoin.exit()
+    .remove();
+}
+
+function buildURL(baseURL, dateKey) {
+  if (dateKey != "")
     return `${baseURL}?$where=${dateKey}>"${getBeginDate()}" AND ${dateKey}<"${getEndDate()}"&$order=${dateKey} DESC&$limit=5000`;
   else
     return `${baseURL}?$limit=10000`;
 
 }
 
-function getBeginDate(){
+function getBeginDate() {
   return M.Datepicker.getInstance(document.querySelector('#begin')).toString('yyyy-mm-dd')
 }
 
-function getEndDate(){
+function getEndDate() {
   return M.Datepicker.getInstance(document.querySelector('#end')).toString('yyyy-mm-dd')
 }
 
@@ -142,6 +155,6 @@ function getVacantHousesInNeighborhood(data) {
   return dictionary;
 }
 
-function outputProportion(data){
+function outputProportion(data) {
 
 }
