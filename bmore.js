@@ -2,7 +2,22 @@
 
 
 var projection = d3.geoMercator(),
-  path = d3.geoPath(projection);
+  path = d3.geoPath(projection)
+svg = d3.select("svg"),
+  tip = d3.tip().attr('class', 'd3-tip').html(function (d) {
+    var dataPoints = '';
+    var keys = Object.keys(d.dict);
+    for (var i = 0; i < keys.length; i++) {
+      dataPoints += '<div class="data-point"><strong>' + keys[i] + ":</strong> " + d.dict[keys[i]] + '</div>';
+    }
+    return `
+    <div>
+      <h3>${d.properties.Name}</h3>
+      ${dataPoints}
+    </div>`;
+  });
+
+svg.call(tip);
 
 
 M.AutoInit();
@@ -29,14 +44,14 @@ $('#demolitionC').change(() => {
   if ($('#demolitionC').is(":checked")) {
     console.log(buildURL("https://data.baltimorecity.gov/resource/9t78-k3wf.geojson", "dateissue"))
     $.ajax({
-        url: buildURL("https://data.baltimorecity.gov/resource/9t78-k3wf.geojson", "dateissue"),
-        type: "GET",
-        data: {
-          "$$app_token" : "eBYEhO8U5MV3A40adxqkH4JRq"
-        }
-    }).done(function(data) {
-     addDataToMap(data, "demolition", "brown")
-     outputProportion(data, "Percentage of Houses to Be Demolished")
+      url: buildURL("https://data.baltimorecity.gov/resource/9t78-k3wf.geojson", "dateissue"),
+      type: "GET",
+      data: {
+        "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
+      }
+    }).done(function (data) {
+      addDataToMap(data, "demolition", "brown")
+      outputProportion(data, "Percentage of Houses to Be Demolished")
     });
   } else {
     console.log("Remove Demolition")
@@ -47,14 +62,14 @@ $('#demolitionC').change(() => {
 $('#vacencyC').change(() => {
   if ($("#vacencyC").is(":checked")) {
     $.ajax({
-        url: buildURL("https://data.baltimorecity.gov/resource/rw5h-nvv4.geojson","noticedate"),
-        type: "GET",
-        data: {
-          "$$app_token" : "eBYEhO8U5MV3A40adxqkH4JRq"
-        }
-    }).done(function(data) {
-        addDataToMap(data, "vacency", "blue")
-        outputProportion(data, "Percentage of Houses Vacant")
+      url: buildURL("https://data.baltimorecity.gov/resource/rw5h-nvv4.geojson", "noticedate"),
+      type: "GET",
+      data: {
+        "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
+      }
+    }).done(function (data) {
+      addDataToMap(data, "vacency", "blue")
+      outputProportion(data, "Percentage of Houses Vacant")
     });
   } else {
     removeDataFromMap("vacency");
@@ -63,25 +78,25 @@ $('#vacencyC').change(() => {
 
 
 $('#housePermitC').change(() => {
-  if($("#housePermitC").is(":checked")){
+  if ($("#housePermitC").is(":checked")) {
     $.ajax({
-        url: buildURL("https://data.baltimorecity.gov/resource/9t78-k3wf.geojson","dateexpire"),
-        type: "GET",
-        data: {
-          "$$app_token" : "eBYEhO8U5MV3A40adxqkH4JRq"
+      url: buildURL("https://data.baltimorecity.gov/resource/9t78-k3wf.geojson", "dateexpire"),
+      type: "GET",
+      data: {
+        "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
+      }
+    }).done(function (data) {
+      noDemPermit = { "type": "FeatureCollection", "features": [] }
+      data["features"].forEach((permit) => {
+        if (permit["properties"]["permitnum"].slice(0, 3) != "DEM") {
+          noDemPermit["features"].push(permit);
+        } else {
+          console.log(permit["properties"]["permitnum"].slice(0, 3))
         }
-    }).done(function(data) {
-        noDemPermit = {  "type": "FeatureCollection",  "features": []}
-        data["features"].forEach((permit) => {
-          if(permit["properties"]["permitnum"].slice(0,3) != "DEM"){
-            noDemPermit["features"].push(permit);
-          }else{
-            console.log(permit["properties"]["permitnum"].slice(0,3))
-          }
-        });
-        addDataToMap(noDemPermit, "housePermit", "green")
+      });
+      addDataToMap(noDemPermit, "housePermit", "green")
     });
-  }else{
+  } else {
     removeDataFromMap("housePermit");
   }
 });
@@ -90,18 +105,18 @@ $('#housePermitC').change(() => {
 
 
 $('#liquorC').change(() => {
-  if($("#liquorC").is(":checked")){
+  if ($("#liquorC").is(":checked")) {
     $.ajax({
-        url: buildURL("https://data.baltimorecity.gov/resource/g2jf-x8pp.geojson", ""),
-        type: "GET",
-        data: {
-          "$$app_token" : "eBYEhO8U5MV3A40adxqkH4JRq"
-        }
-    }).done(function(data) {
-        console.log(data)
-        addDataToMap(data, "liquor", "yellow")
+      url: buildURL("https://data.baltimorecity.gov/resource/g2jf-x8pp.geojson", ""),
+      type: "GET",
+      data: {
+        "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
+      }
+    }).done(function (data) {
+      console.log(data)
+      addDataToMap(data, "liquor", "yellow")
     });
-  }else{
+  } else {
     removeDataFromMap("liquor");
   }
 });
@@ -116,13 +131,26 @@ function addDataToMap(newData, id, color) {
   render();
 }
 
-function removeDataFromMap(id){
+function removeDataFromMap(id) {
   data = data.filter(d => d.id !== id);
   render();
 }
 
 function render(max_den = 12181) {
-  var mapDataJoin = d3.select("#neighborhoods")
+  neighborhoods = neighborhoods.map(function (d) {
+    d.dict = data.reduce(function (dict, dot) {
+      try {
+        if (dot.properties.neighborhood.toLowerCase() === d.properties.Name.toLowerCase()) {
+          dict[dot.id] = dict[dot.id] === undefined ? 1 : dict[dot.id] + 1;
+        }
+      } catch (e) {
+      }
+      return dict;
+    }, {});
+
+    return d;
+  });
+  var mapDataJoin = svg
     .selectAll('.neighborhood')
     .data(neighborhoods);
 
@@ -130,28 +158,21 @@ function render(max_den = 12181) {
       .append("path")
       .attr("class", "neighborhood")
       .attr("d", path)
-      .on("mouseover", function(d){
+      .on("mouseover", function (d) {
         d3.select(this).attr("fill", "orange");
         console.log("IN: " + d.properties.Name); console.log(d);
-
-        var dict = data.reduce(function(dict, dot){
-          if(dot.properties.neighborhood.toLowerCase() === d.properties.Name.toLowerCase()){
-            dict[dot.id] = dict[dot.id] === undefined ? 1 : dict[dot.id]+1;
-          }
-          return dict;
-        }, {});
-
-        console.log(dict);
-      }).on("mouseout", function(d){
+      }).on("mouseout", function (d) {
         d3.select(this).attr("fill", "none");
-        console.log("OUT: " + d.properties.Community);
+        console.log("OUT: " + d.properties.Name);
       })
+      .on('mouseover.tip', tip.show)
+      .on('mouseout.tip', tip.hide)
       .style("fill", (d) => `rgb(${ (1 - (d.properties.Pop_dens/max_den)) * 255}, 255, 255)`);
 
 
 
 
-  var dotsDataJoin = d3.select("#map")
+  var dotsDataJoin = svg
     .selectAll(".point")
     .data(data);
 
@@ -194,18 +215,18 @@ function getVacantHousesInNeighborhood(data) {
   return dictionary;
 }
 
-function outputProportion(data, header){
+function outputProportion(data, header) {
   $('#propHead').html(header)
   $('proportions').html("")
   let vacantHouses = getVacantHousesInNeighborhood(data);
-  Object.keys(vacantHouses).forEach(function(key) {
+  Object.keys(vacantHouses).forEach(function (key) {
     console.log(key)
     $.ajax({
       url: `https://data.baltimorecity.gov/resource/piqw-tyem.json?csa2010=#{key}`,
       type: "GET"
     }).done((data) => {
       // console.log(data)
-      $('proportions').append(`<tr><td>${key}</td><td>${(vacantHouses[key]/data["shomes12"])*100}</td></tr>`);
+      $('proportions').append(`<tr><td>${key}</td><td>${(vacantHouses[key] / data["shomes12"]) * 100}</td></tr>`);
     });
   });
 }

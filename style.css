@@ -6,3 +6,14 @@
   mix-blend-mode: multiply;
   pointer-events: none;
 }
+
+.d3-tip {
+  border: 1px solid #111;
+  background: #fff;
+  padding: 5px;
+}
+
+.d3-tip h3 {
+  margin: 0;
+  font-size: 16px;
+}
