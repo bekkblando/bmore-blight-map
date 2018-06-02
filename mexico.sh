@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 mkdir -p build
 
@@ -10,24 +10,20 @@ curl -z build/municipios.zip -o build/municipios.zip http://mapserver.inegi.org.
 unzip -od build build/estados.zip
 unzip -od build build/municipios.zip
 
-# Compute the scale and translate for 960×600 inset by 10px.
-TRANSFORM=$(shp2json build/Entidades_2010_5.shp \
-  | ndjson-map -r d3=d3-geo 'p = d3.geoIdentity().reflectY(true).fitExtent([[10, 10], [960 - 10, 600 - 10]], d), "d3.geoIdentity().reflectY(true).scale(" + p.scale() + ").translate([" + p.translate() + "])"' \
-  | tr -d '"')
+# Reproject to WGS84.
+ogr2ogr build/states.shp build/Entidades_2010_5.shp -t_srs "+proj=longlat +ellps=WGS84 +no_defs +towgs84=0,0,0"
+ogr2ogr build/municipalities.shp build/Municipios_2010_5.shp -t_srs "+proj=longlat +ellps=WGS84 +no_defs +towgs84=0,0,0"
 
 # shp2json - convert shapefiles to GeoJSON.
 # ndjson-map - map property names and coerce numeric properties.
-# geoproject - scale and translate to fit in 960×500.
 # geo2topo - convert GeoJSON to TopoJSON.
 # toposimplify - simplify TopoJSON.
 # topoquantize - quantize TopoJSON.
 geo2topo -n \
-  states=<(shp2json -n build/Entidades_2010_5.shp \
-    | ndjson-map 'd.properties = {state_code: +d.properties.CVE_ENT, state_name: d.properties.NOM_ENT}, d' \
-    | geoproject -n ${TRANSFORM}) \
-  municipalities=<(shp2json -n build/Municipios_2010_5.shp \
-    | ndjson-map 'd.properties = {state_code: +d.properties.CVE_ENT, mun_code: +d.properties.CVE_MUN, mun_name: d.properties.NOM_MUN}, d' \
-    | geoproject -n ${TRANSFORM}) \
-  | toposimplify -p 1 \
+  states=<(shp2json -n build/states.shp \
+    | ndjson-map 'd.properties = {state_code: +d.properties.CVE_ENT, state_name: d.properties.NOM_ENT}, d') \
+  municipalities=<(shp2json -n build/municipalities.shp \
+    | ndjson-map 'd.properties = {state_code: +d.properties.CVE_ENT, mun_code: +d.properties.CVE_MUN, mun_name: d.properties.NOM_MUN}, d') \
+  | toposimplify -s 1e-7 \
   | topoquantize 1e5 \
   > mx.json
