@@ -1,4 +1,4 @@
-(function () { var script = document.createElement('script'); script.onload = function () { var stats = new Stats(); document.body.appendChild(stats.dom); requestAnimationFrame(function loop() { stats.update(); requestAnimationFrame(loop) }); }; script.src = '//rawgit.com/mrdoob/stats.js/master/build/stats.min.js'; document.head.appendChild(script); })()
+(function () { var script = document.createElement('script'); script.onload = function () { var stats = new Stats(); document.body.appendChild(stats.dom); requestAnimationFrame(function loop() { stats.update(); requestAnimationFrame(loop) }); }; script.src = 'https://rawgit.com/mrdoob/stats.js/master/build/stats.min.js'; document.head.appendChild(script); })()
 
 
 var projection = d3.geoMercator(),
@@ -17,6 +17,10 @@ d3.json("https://gis-baltimore.opendata.arcgis.com/datasets/1ca93e68f11541d4b59a
   neighborhoods = bmore.features;
   projection.fitSize([960, 600], bmore);
   render();
+
+  d3.json("https://data.baltimorecity.gov/resource/vh9s-zq9a.json?$order=pop_dens DESC&$limit=1", (error, rawPop) => {
+    render(rawPop[0].pop_dens);
+  });
 
 });
 
@@ -117,7 +121,7 @@ function removeDataFromMap(id){
   render();
 }
 
-function render() {
+function render(max_den = 12181) {
   var mapDataJoin = d3.select("#neighborhoods")
     .selectAll('.neighborhood')
     .data(neighborhoods);
@@ -132,7 +136,8 @@ function render() {
       .on("mouseout", function(d){
         d3.select(this).attr("fill", "none");
         console.log("OUT: " + d.properties.Community);
-      });
+      })
+      .style("fill", (d) => `rgb(${ (1 - (d.properties.Pop_dens/max_den)) * 255}, 255, 255)`);
 
 
 
