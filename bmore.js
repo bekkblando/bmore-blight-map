@@ -182,7 +182,7 @@ function render(max_den = 12181) {
     .style("fill", d => d.color)
     .attr("cx", d => projection(d.geometry.coordinates)[0])
     .attr("cy", d => projection(d.geometry.coordinates)[1])
-    .attr("r", 5);
+    .attr("r", 2);
 
   dotsDataJoin.exit()
     .remove();

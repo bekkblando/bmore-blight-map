@@ -3,7 +3,7 @@
 }
 .point {
   stroke:none;
-  mix-blend-mode: multiply;
+  /* mix-blend-mode: multiply; */
   pointer-events: none;
 }
 
