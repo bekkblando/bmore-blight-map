@@ -2,8 +2,11 @@
 
 
 var projection = d3.geoMercator(),
-  path = d3.geoPath(projection)
-svg = d3.select("svg"),
+  path = d3.geoPath(projection),
+  canvasLayer = d3.select("canvas"),
+  canvas = canvasLayer.node(),
+  context = canvas.getContext("2d"),
+  svg = d3.select("svg"),
   tip = d3.tip().attr('class', 'd3-tip').html(function (d) {
     var dataPoints = '';
     var keys = Object.keys(d.dict);
@@ -154,23 +157,20 @@ function render(max_den = 12181) {
     .selectAll('.neighborhood')
     .data(neighborhoods);
 
-    mapDataJoin.enter()
-      .append("path")
-      .attr("class", "neighborhood")
-      .attr("d", path)
-      .on("mouseover", function (d) {
-        d3.select(this).attr("fill", "orange");
-        console.log("IN: " + d.properties.Name); console.log(d);
-      }).on("mouseout", function (d) {
-        d3.select(this).attr("fill", "none");
-        console.log("OUT: " + d.properties.Name);
-      })
-      .on('mouseover.tip', tip.show)
-      .on('mouseout.tip', tip.hide)
-      .style("fill", (d) => `rgb(${ (1 - (d.properties.Pop_dens/max_den)) * 255}, 255, 255)`);
-
-
-
+  mapDataJoin.enter()
+    .append("path")
+    .attr("class", "neighborhood")
+    .attr("d", path)
+    .on("mouseover", function (d) {
+      d3.select(this).attr("fill", "orange");
+      console.log("IN: " + d.properties.Name); console.log(d);
+    }).on("mouseout", function (d) {
+      d3.select(this).attr("fill", "none");
+      console.log("OUT: " + d.properties.Name);
+    })
+    .on('mouseover.tip', tip.show)
+    .on('mouseout.tip', tip.hide)
+    .style("fill", (d) => `rgb(${(1 - (d.properties.Pop_dens / max_den)) * 255}, 255, 255)`);
 
   var dotsDataJoin = svg
     .selectAll(".point")
@@ -182,10 +182,20 @@ function render(max_den = 12181) {
     .style("fill", d => d.color)
     .attr("cx", d => projection(d.geometry.coordinates)[0])
     .attr("cy", d => projection(d.geometry.coordinates)[1])
-    .attr("r", 2);
+    .attr("r", 1);
 
   dotsDataJoin.exit()
     .remove();
+
+  var heat = simpleheat(canvas);
+  heat.data(data.map(d => {
+    var heatstuff = projection(d.geometry.coordinates);
+    heatstuff.push(1);
+    return heatstuff;
+  }));
+  heat.max(100);
+  heat.radius(10, 10);
+  heat.draw(0.05);
 }
 
 function buildURL(baseURL, dateKey) {
