@@ -38,7 +38,7 @@ $('#demolitionC').change(() => {
     });
   } else {
     console.log("Remove Demolition")
-    $("#demolition").remove()
+    removeDataFromMap("demolition");
   }
 });
 
@@ -54,7 +54,7 @@ $('#vacencyC').change(() => {
       addDataToMap(data, "vacency", "blue")
     });
   } else {
-    $("#vacency").remove()
+    removeDataFromMap("vacency");
   }
 });
 
@@ -73,7 +73,7 @@ $('#crimeC').change(() => {
       addDataToMap(data, "crime", "red")
     });
   } else {
-    $("#crime").remove()
+    removeDataFromMap("crime");
   }
 });
 
@@ -97,37 +97,35 @@ $('#foodC').change(() => {
 var data = [];
 
 function addDataToMap(newData, id, color) {
-  var newFeatures = newData.features.filter(function (d) { return !!d.geometry; });
-  var startTime = Date.now();
-  !function addOneDataPoint() {
-    var numberToAdd = Math.ceil(newFeatures.length * 0.1);
-    console.log(numberToAdd);
-    for (var i = 0; i < numberToAdd && newFeatures.length > 0; i++) {
-      data.push(newFeatures.shift());
-    }
-    var newCircle = d3.select("#map")
-      .selectAll(".point")
-      .data(data)
-      .enter()
-      .append("circle")
-      .attr("class", "point")
-      // .attr("r", 0)
-      // .attr("cx", 0)
-      // .attr("cy", 0)
-      .style("fill", "rgb(240,0,0)")
-      // .transition()
-      //   .duration(1000)
-      .attr("cx", d => projection(d.geometry.coordinates)[0])
-      .attr("cy", d => projection(d.geometry.coordinates)[1])
-      .attr("r", 5);
-    if (newFeatures.length > 0) {
-      requestAnimationFrame(addOneDataPoint);
-    } else {
-      var endTime = Date.now();
-      var deltaTime = (endTime - startTime) / 1000;
-      console.log("Done! " + deltaTime + " seconds");
-    }
-  }();
+  var newFeatures = newData.features
+    .map(function (d) { d.id = id; d.color = color; return d; })
+    .filter(function (d) { return !!d.geometry; });
+  data = data.concat(newFeatures);
+  renderData();
+}
+
+function removeDataFromMap(id){
+  data = data.filter(d => d.id !== id);
+  renderData();
+}
+
+function renderData() {
+
+
+  var dataJoin = d3.select("#map")
+    .selectAll(".point")
+    .data(data);
+
+  dataJoin.enter()
+    .append("circle")
+    .attr("class", "point")
+    .style("fill", d => d.color)
+    .attr("cx", d => projection(d.geometry.coordinates)[0])
+    .attr("cy", d => projection(d.geometry.coordinates)[1])
+    .attr("r", 5);
+
+  dataJoin.exit()
+    .remove();
 }
 
 function buildURL(baseURL, dateKey) {
