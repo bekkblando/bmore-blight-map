@@ -10,16 +10,13 @@ M.AutoInit();
 M.Datepicker.getInstance(document.getElementById('begin')).setDate(new Date(2007, 0, 1));
 M.Datepicker.getInstance(document.getElementById('end')).setDate(new Date(2008, 0, 1));
 
+var neighborhoods = [];
 d3.json("bmore.json", function (error, bmore) {
   if (error) throw error;
 
-  var neighborhoods = topojson.feature(bmore, bmore.objects.neighborhoods);
-
+  neighborhoods = topojson.feature(bmore, bmore.objects.neighborhoods);
   projection.fitSize([960, 600], neighborhoods);
-
-  d3.select("#neighborhoods")
-    .datum(neighborhoods)
-    .attr("d", path);
+  render();
 
 });
 
@@ -112,22 +109,41 @@ function addDataToMap(newData, id, color) {
     .map(function (d) { d.id = id; d.color = color; return d; })
     .filter(function (d) { return !!d.geometry; });
   data = data.concat(newFeatures);
-  renderData();
+  render();
 }
 
 function removeDataFromMap(id){
   data = data.filter(d => d.id !== id);
-  renderData();
+  render();
 }
 
-function renderData() {
+function render() {
+  var mapDataJoin = d3.select("#neighborhoods")
+    .selectAll('.neighborhood')
+    .data(neighborhoods.features);
+
+    mapDataJoin.enter()
+      .append("path")
+      .attr("class", "neighborhood")
+      .attr("d", path)
+      // .on("mouseover", function(d){
+      //   d3.select(this).attr("fill", "orange");
+      //   console.log("IN: " + d.properties.Community); console.log(d);})
+      // .on("mouseout", function(d){
+      //   // d3.select(this).attr({
+      //   //   fill: "none"
+      //   // });
+      //   console.log("OUT: " + d.properties.Community);
+      // });
 
 
-  var dataJoin = d3.select("#map")
+
+
+  var dotsDataJoin = d3.select("#map")
     .selectAll(".point")
     .data(data);
 
-  dataJoin.enter()
+  dotsDataJoin.enter()
     .append("circle")
     .attr("class", "point")
     .style("fill", d => d.color)
@@ -135,7 +151,7 @@ function renderData() {
     .attr("cy", d => projection(d.geometry.coordinates)[1])
     .attr("r", 5);
 
-  dataJoin.exit()
+  dotsDataJoin.exit()
     .remove();
 }
 
