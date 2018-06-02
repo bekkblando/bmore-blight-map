@@ -30,6 +30,7 @@ $('#demolitionC').change(() => {
         }
     }).done(function(data) {
      addDataToMap(data, "demolition", "brown")
+     outputProportion(data, "Percentage of Houses to Be Demolished")
     });
   }else{
     console.log("Remove Demolition")
@@ -47,6 +48,7 @@ $('#vacencyC').change(() => {
         }
     }).done(function(data) {
         addDataToMap(data, "vacency", "blue")
+        outputProportion(data, "Percentage of Houses Vacant")
     });
   }else{
     $("#vacency").remove()
@@ -54,41 +56,47 @@ $('#vacencyC').change(() => {
 });
 
 
-$('#crimeC').change(() => {
-  if($("#crimeC").is(":checked")){
-    console.log(buildURL("https://data.baltimorecity.gov/resource/4ih5-d5d5.geojson","crimetime"))
+$('#housePermitC').change(() => {
+  if($("#housePermitC").is(":checked")){
     $.ajax({
-        url: buildURL("https://data.baltimorecity.gov/resource/m8g9-abgb.geojson","crimetime"),
+        url: buildURL("https://data.baltimorecity.gov/resource/9t78-k3wf.geojson","dateexpire"),
         type: "GET",
         data: {
           "$$app_token" : "eBYEhO8U5MV3A40adxqkH4JRq"
         }
     }).done(function(data) {
-        console.log("Crime Data: ", data)
-        addDataToMap(data, "crime", "red")
+        noDemPermit = {  "type": "FeatureCollection",  "features": []}
+        data["features"].forEach((permit) => {
+          if(permit["properties"]["permitnum"].slice(0,3) != "DEM"){
+            noDemPermit["features"].push(permit);
+          }else{
+            console.log(permit["properties"]["permitnum"].slice(0,3))
+          }
+        });
+        addDataToMap(noDemPermit, "housePermit", "green")
     });
   }else{
-    $("#crime").remove()
+    $("#housePermit").remove()
   }
 });
 
 
 
 
-$('#foodC').change(() => {
-  if($("#foodC").is(":checked")){
+$('#liquorC').change(() => {
+  if($("#liquorC").is(":checked")){
     $.ajax({
-        url: buildURL("https://data.baltimorecity.gov/resource/8gms-s9we.geojson", ""),
+        url: buildURL("https://data.baltimorecity.gov/resource/g2jf-x8pp.geojson", ""),
         type: "GET",
         data: {
           "$$app_token" : "eBYEhO8U5MV3A40adxqkH4JRq"
         }
     }).done(function(data) {
         console.log(data)
-        addDataToMap(data, "food", "green")
+        addDataToMap(data, "liquor", "yellow")
     });
   }else{
-    $("#food").remove()
+    $("#liquor").remove()
   }
 });
 
@@ -128,6 +136,18 @@ function getVacantHousesInNeighborhood(data) {
   return dictionary;
 }
 
-function outputProportion(data){
-
+function outputProportion(data, header){
+  $('#propHead').html(header)
+  $('proportions').html("")
+  let vacantHouses = getVacantHousesInNeighborhood(data);
+  Object.keys(vacantHouses).forEach(function(key) {
+    console.log(key)
+    $.ajax({
+      url: `https://data.baltimorecity.gov/resource/piqw-tyem.json?csa2010=#{key}`,
+      type: "GET"
+    }).done((data) => {
+      console.log(data)
+      $('proportions').append(`<tr><td>${key}</td><td>${(vacantHouses[key]/data["shomes12"])*100}</td></tr>`);
+    });
+  });
 }
