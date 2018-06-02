@@ -9,6 +9,12 @@ var projection = d3.geoMercator(),
   svg = d3.select("svg"),
   heat = simpleheat(canvas),
   whichHeat = "none",
+  heatMaxDict ={
+    "vacancy": 100,
+    "demolition": 1,
+    "housePermit": 100,
+    "liquor": 1000
+  },
   tip = d3.tip().attr('class', 'd3-tip').html(function (d) {
     var dataPoints = '';
     var keys = Object.keys(d.dict);
@@ -301,7 +307,7 @@ function render(max_den = 12181) {
         heatstuff.push(1);
         return heatstuff;
       }));
-    heat.max(100);
+    heat.max(heatMaxDict[whichHeat]);
     heat.radius(10, 10);
     heat.draw(0.05);
   }
