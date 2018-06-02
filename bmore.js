@@ -8,6 +8,7 @@ var projection = d3.geoMercator(),
   context = canvas.getContext("2d"),
   svg = d3.select("svg"),
   heat = simpleheat(canvas),
+  whichHeat = "none",
   tip = d3.tip().attr('class', 'd3-tip').html(function (d) {
     var dataPoints = '';
     var keys = Object.keys(d.dict);
@@ -54,8 +55,15 @@ $('#demolitionC').change(() => {
         "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
       }
     }).done(function (data) {
-      addDataToMap(data, "demolition", "brown")
-      outputProportion(data, "Percentage of Houses to Be Demolished")
+      var demPermit = { "type": "FeatureCollection", "features": [] }
+      data["features"].forEach((permit) => {
+        if (permit["properties"]["permitnum"].slice(0, 3) == "DEM") {
+          demPermit["features"].push(permit);
+        } else {
+          console.log(permit["properties"]["permitnum"].slice(0, 3))
+        }
+      });
+      addDataToMap(demPermit, "demolition", "brown")
     });
   } else {
     console.log("Remove Demolition")
@@ -125,19 +133,109 @@ $('#liquorC').change(() => {
   }
 });
 
-var showHeatmap = false;
-$('#showHeatmap').change(() => {
-  showHeatmap = $("#vacancyC").is(":checked");
-  render();
+
+$("#vacancyR").change(() => {
+  if ($("#vacancyR").is(":checked")) {
+    whichHeat = "vacancy";
+    $.ajax({
+      url: buildURL("https://data.baltimorecity.gov/resource/rw5h-nvv4.geojson", "noticedate"),
+      type: "GET",
+      data: {
+        "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
+      }
+    }).done(addDataToHeat);
+  }
 });
 
+
+$("#demolitionR").change(() => {
+  if ($("#demolitionR").is(":checked")) {
+    whichHeat = "demolition";
+
+    $.ajax({
+      url: buildURL("https://data.baltimorecity.gov/resource/9t78-k3wf.geojson", "dateissue"),
+      type: "GET",
+      data: {
+        "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
+      }
+    }).done(function (data) {
+      var demPermit = { "type": "FeatureCollection", "features": [] }
+      data["features"].forEach((permit) => {
+        if (permit["properties"]["permitnum"].slice(0, 3) == "DEM") {
+          demPermit["features"].push(permit);
+        } else {
+          console.log(permit["properties"]["permitnum"].slice(0, 3))
+        }
+      });
+      addDataToHeat(demPermit, "demolition", "brown")
+    });
+  }
+});
+
+
+$("#housePermitR").change(() => {
+  if ($("#housePermitR").is(":checked")) {
+    whichHeat = "housePermit";
+
+    $.ajax({
+      url: buildURL("https://data.baltimorecity.gov/resource/9t78-k3wf.geojson", "dateexpire"),
+      type: "GET",
+      data: {
+        "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
+      }
+    }).done(function (data) {
+      noDemPermit = { "type": "FeatureCollection", "features": [] }
+      data["features"].forEach((permit) => {
+        if (permit["properties"]["permitnum"].slice(0, 3) != "DEM") {
+          noDemPermit["features"].push(permit);
+        } else {
+          console.log(permit["properties"]["permitnum"].slice(0, 3))
+        }
+      });
+      addDataToHeat(noDemPermit, "housePermit", "green");
+    });
+  }
+});
+
+
+$("#liquorR").change(() => {
+  if ($("#liquorR").is(":checked")) {
+    whichHeat = "liquor";
+
+    $.ajax({
+      url: buildURL("https://data.baltimorecity.gov/resource/g2jf-x8pp.geojson", ""),
+      type: "GET",
+      data: {
+        "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
+      }
+    }).done(addDataToHeat);
+  }
+});
+
+
+$("#noneR").change(() => {
+  if ($("#noneR").is(":checked")) {
+    whichHeat = "none";
+    addDataToHeat({features:[]});
+  }
+});
+
+
+
 var data = [];
+var heatData = [];
 
 function addDataToMap(newData, id, color) {
   var newFeatures = newData.features
     .map(function (d) { d.id = id; d.color = color; return d; })
     .filter(function (d) { return !!d.geometry; });
   data = data.concat(newFeatures);
+  render();
+}
+
+function addDataToHeat(newData) {
+  heatData = newData.features
+    .filter(function (d) { return !!d.geometry; });
   render();
 }
 
@@ -194,19 +292,18 @@ function render(max_den = 12181) {
   dotsDataJoin.exit()
     .remove();
 
-
-  if (showHeatmap) {
-    heat.clear();
-    heat.data(data.map(d => {
-      var heatstuff = projection(d.geometry.coordinates);
-      heatstuff.push(1);
-      return heatstuff;
-    }));
+  context.clearRect(0,0,960,600);
+  heat.clear();
+  if (whichHeat !== "none") {
+    heat.data(heatData
+      .map(d => {
+        var heatstuff = projection(d.geometry.coordinates);
+        heatstuff.push(1);
+        return heatstuff;
+      }));
     heat.max(100);
     heat.radius(10, 10);
     heat.draw(0.05);
-  } else {
-    heat.clear();
   }
 }
 
