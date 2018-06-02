@@ -12,17 +12,27 @@
     <div class="container">
       <div class="row">
         <div class="col s4">
-          <input name="beginYear" type="year"/>
-          <input name="beginMonth" type="month"/>
+          <label>
+            <span>Start Date</span>
+            <input type="text" id="begin" class="datepicker"/>
+          </label>
 
-          <input name="endYear" type="year"/>
-          <input name="endMonth" type="month"/>
+          <label>
+            <span>End Date</span>
+            <input type="text" id="end" class="datepicker"/>
+          </label>
         </div>
         <div class="col s4">
           Toggle Switches
-            <label><input name="vacency" type="checkbox"/><span>Vacency</span></label>
-            <label><input name="demolition" type="checkbox"/><span>Demolition</span></label>
-            <label><input name="crime" type="checkbox"/><span>Crime</span></label>
+            <div>
+              <label><input id="vacencyC" type="checkbox"/><span>Vacency</span></label>
+            </div>
+            <div>
+              <label><input id="demolitionC" type="checkbox"/><span>Demolition</span></label>
+            </div>
+            <div>
+              <label><input id="crimeC" type="checkbox"/><span>Crime</span></label>
+            </div>
         </div>
         <div class="col s4">
           key

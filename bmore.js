@@ -1,6 +1,9 @@
 var projection = d3.geoMercator(),
     path = d3.geoPath(projection);
 
+
+M.AutoInit();
+
 d3.json("bmore.json", function(error, bmore) {
   if (error) throw error;
 
@@ -14,70 +17,59 @@ d3.json("bmore.json", function(error, bmore) {
 
 });
 
-$(function() {
-  $('input[name="datetimes"]').daterangepicker({
-    startDate: moment().startOf('hour'),
-    endDate: moment().startOf('hour').add(32, 'hour'),
-    showDropdowns: true,
-    locale: {
-      format: 'M/DD hh:mm A'
-    }
-  })
-  $('input[name="datetimes"]').on('apply.daterangepicker',
-    (event, obj) => {
 
-      $.ajax({
-          url: "https://data.baltimorecity.gov/resource/9t78-k3wf.geojson",
-          type: "GET",
-          data: {
-            "$$app_token" : "eBYEhO8U5MV3A40adxqkH4JRq"
-          }
-      }).done(function(data) {
-        console.log(data)
-        let destructionFiltered = {
-          "type": "FeatureCollection",
-          "features":  getDataPoints(obj.startDate, obj.endDate, data, "dateissue")
-        };
-        console.log("Destruction ", destructionFiltered)
-        d3.select("svg").append("path")
-       .datum(destructionFiltered)
-       .attr("d", path)
-       .attr("class", "destruct")
-       .style("fill", "red")
-
-      });
-
-      $.ajax({
-          url: "https://data.baltimorecity.gov/resource/rw5h-nvv4.geojson",
-          type: "GET",
-          data: {
-            "$$app_token" : "eBYEhO8U5MV3A40adxqkH4JRq"
-          }
-      }).done(function(data) {
-          let vacencyFiltered = {
-            "type": "FeatureCollection",
-            "features": getDataPoints(obj.startDate, obj.endDate, data, "noticedate")
-          };
-
-          d3.select("svg").append("path")
-         .datum(vacencyFiltered)
-         .attr("d", path)
-         .attr("class", "vacency")
-         .style("fill", "blue")
-      });
+// Get the demolition based off the dates if the checkbox is checked
+$('#demolitionC').change(() => {
+  if($('#demolitionC').is(":checked")) {
+    console.log(buildURL("https://data.baltimorecity.gov/resource/9t78-k3wf.geojson", "dateissue"))
+    $.ajax({
+        url: buildURL("https://data.baltimorecity.gov/resource/9t78-k3wf.geojson", "dateissue"),
+        type: "GET",
+        data: {
+          "$$app_token" : "eBYEhO8U5MV3A40adxqkH4JRq"
+        }
+    }).done(function(data) {
+      d3.select("svg").append("path")
+     .datum(data)
+     .attr("d", path)
+     .attr("id", "demolition")
+     .style("fill", "red")
 
     });
+  }else{
+    $("#demolition").remove()
+  }
 });
 
-function getDateFromElement(element, dateKey) {
-  return new Date(element['properties'][dateKey]);
+$('#vacencyC').change(() => {
+  if($("#vacencyC").is(":checked")){
+    $.ajax({
+        url: buildURL("https://data.baltimorecity.gov/resource/rw5h-nvv4.geojson","noticedate"),
+        type: "GET",
+        data: {
+          "$$app_token" : "eBYEhO8U5MV3A40adxqkH4JRq"
+        }
+    }).done(function(data) {
+        console.log("Vacency Data: ", data)
+        d3.select("svg").append("path")
+       .datum(data)
+       .attr("d", path)
+       .attr("id", "vacency")
+       .style("fill", "blue")
+    });
+  }else{
+    $("#vacency").remove()
+  }
+});
+
+function buildURL(baseURL, dateKey){
+  return `${baseURL}?$where=${dateKey}>"${getBeginDate()}" AND ${dateKey}<"${getEndDate()}"&$order=${dateKey} DESC`
 }
 
-function getDataPoints(start, end, data, dateKey) {
-  return data['features'].filter(datum => {
-    const datumDate = getDateFromElement(datum, dateKey);
-    return (start < datumDate && datumDate < end);
-  }).sort((a, b) => {
-    return getDateFromElement(b, dateKey) - getDateFromElement(a, dateKey);
-    });
+function getBeginDate(){
+  return M.Datepicker.getInstance(document.querySelector('#begin')).toString('yyyy-mm-dd')
+}
+
+function getEndDate(){
+  return M.Datepicker.getInstance(document.querySelector('#end')).toString('yyyy-mm-dd')
 }
