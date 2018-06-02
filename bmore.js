@@ -7,6 +7,7 @@ var projection = d3.geoMercator(),
   canvas = canvasLayer.node(),
   context = canvas.getContext("2d"),
   svg = d3.select("svg"),
+  heat = simpleheat(canvas),
   tip = d3.tip().attr('class', 'd3-tip').html(function (d) {
     var dataPoints = '';
     var keys = Object.keys(d.dict);
@@ -124,6 +125,12 @@ $('#liquorC').change(() => {
   }
 });
 
+var showHeatmap = false;
+$('#showHeatmap').change(() => {
+  showHeatmap = $("#vacancyC").is(":checked");
+  render();
+});
+
 var data = [];
 
 function addDataToMap(newData, id, color) {
@@ -187,15 +194,20 @@ function render(max_den = 12181) {
   dotsDataJoin.exit()
     .remove();
 
-  var heat = simpleheat(canvas);
-  heat.data(data.map(d => {
-    var heatstuff = projection(d.geometry.coordinates);
-    heatstuff.push(1);
-    return heatstuff;
-  }));
-  heat.max(100);
-  heat.radius(10, 10);
-  heat.draw(0.05);
+
+  if (showHeatmap) {
+    heat.clear();
+    heat.data(data.map(d => {
+      var heatstuff = projection(d.geometry.coordinates);
+      heatstuff.push(1);
+      return heatstuff;
+    }));
+    heat.max(100);
+    heat.radius(10, 10);
+    heat.draw(0.05);
+  } else {
+    heat.clear();
+  }
 }
 
 function buildURL(baseURL, dateKey) {
