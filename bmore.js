@@ -4,6 +4,9 @@ var projection = d3.geoMercator(),
 
 M.AutoInit();
 
+M.Datepicker.getInstance(document.getElementById('begin')).setDate(new Date(2007,0,1));
+M.Datepicker.getInstance(document.getElementById('end')).setDate(new Date(2008,0,1));
+
 d3.json("bmore.json", function(error, bmore) {
   if (error) throw error;
 
