@@ -1,6 +1,25 @@
 (function () { var script = document.createElement('script'); script.onload = function () { var stats = new Stats(); document.body.appendChild(stats.dom); requestAnimationFrame(function loop() { stats.update(); requestAnimationFrame(loop) }); }; script.src = 'https://rawgit.com/mrdoob/stats.js/master/build/stats.min.js'; document.head.appendChild(script); })()
 
 
+function parseHousing(data, demolition){
+  var demPermit = { "type": "FeatureCollection", "features": [] }
+  data["features"].forEach((permit) => {
+    let type = permit["properties"]["permitnum"].slice(0, 3);
+    if ((type == "DEM" && demolition) || (type != "DEM" && !demolition)) {
+      demPermit["features"].push(permit);
+    }
+  });
+  console.log(demPermit)
+  return demPermit
+}
+
+configuration_map = {
+  "vacancy": {"url": "https://data.baltimorecity.gov/resource/rw5h-nvv4.geojson", "dateKey": "noticedate", "color": "blue"},
+  "demolition": {"url": "https://data.baltimorecity.gov/resource/9t78-k3wf.geojson", "dateKey": "dateissue","color": "brown", "parseFunc": parseHousing},
+  "housePermit": {"url": "https://data.baltimorecity.gov/resource/9t78-k3wf.geojson", "dateKey": "dateexpire", "color": "red", "parseFunc": parseHousing},
+  "liquor": {"url": "https://data.baltimorecity.gov/resource/g2jf-x8pp.geojson", "color": "yellow", "dateKey": ""}
+}
+
 var projection = d3.geoMercator(),
   path = d3.geoPath(projection),
   canvasLayer = d3.select("canvas"),
@@ -50,173 +69,47 @@ d3.json("https://gis-baltimore.opendata.arcgis.com/datasets/1ca93e68f11541d4b59a
 
 });
 
-// Get the demolition based off the dates if the checkbox is checked
-$('#demolitionC').change(() => {
-  if ($('#demolitionC').is(":checked")) {
-    console.log(buildURL("https://data.baltimorecity.gov/resource/9t78-k3wf.geojson", "dateissue"))
-    $.ajax({
-      url: buildURL("https://data.baltimorecity.gov/resource/9t78-k3wf.geojson", "dateissue"),
-      type: "GET",
-      data: {
-        "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
-      }
-    }).done(function (data) {
-      var demPermit = { "type": "FeatureCollection", "features": [] }
-      data["features"].forEach((permit) => {
-        if (permit["properties"]["permitnum"].slice(0, 3) == "DEM") {
-          demPermit["features"].push(permit);
-        } else {
-          console.log(permit["properties"]["permitnum"].slice(0, 3))
+for (const [key, value] of Object.entries(configuration_map)) {
+  console.log(key, value);
+  // Get the demolition based off the dates if the checkbox is checked
+  $(`#${key}C`).change(() => {
+    if ($(`#${key}C`).is(":checked")) {
+      console.log(buildURL(value["url"], value["dateKey"]))
+      $.ajax({
+        url: buildURL(value["url"], value["dateKey"]),
+        type: "GET",
+        data: {
+          "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
         }
-      });
-      addDataToMap(demPermit, "demolition", "brown")
-    });
-  } else {
-    console.log("Remove Demolition")
-    removeDataFromMap("demolition");
-  }
-});
-
-$('#vacancyC').change(() => {
-  if ($("#vacancyC").is(":checked")) {
-    $.ajax({
-      url: buildURL("https://data.baltimorecity.gov/resource/rw5h-nvv4.geojson", "noticedate"),
-      type: "GET",
-      data: {
-        "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
-      }
-    }).done(function (data) {
-      addDataToMap(data, "vacancy", "blue")
-      outputProportion(data, "Percentage of Houses Vacant")
-    });
-  } else {
-    removeDataFromMap("vacancy");
-  }
-});
-
-
-$('#housePermitC').change(() => {
-  if ($("#housePermitC").is(":checked")) {
-    $.ajax({
-      url: buildURL("https://data.baltimorecity.gov/resource/9t78-k3wf.geojson", "dateexpire"),
-      type: "GET",
-      data: {
-        "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
-      }
-    }).done(function (data) {
-      noDemPermit = { "type": "FeatureCollection", "features": [] }
-      data["features"].forEach((permit) => {
-        if (permit["properties"]["permitnum"].slice(0, 3) != "DEM") {
-          noDemPermit["features"].push(permit);
-        } else {
-          console.log(permit["properties"]["permitnum"].slice(0, 3))
+      }).done(function (data) {
+        if(value.hasOwnProperty('parseFunc')){
+          data = value["parseFunc"](data, key == "demolition")
         }
+        addDataToMap(data, key, value["color"])
       });
-      addDataToMap(noDemPermit, "housePermit", "green")
-    });
-  } else {
-    removeDataFromMap("housePermit");
-  }
-});
+    } else {
+      removeDataFromMap(key);
+    }
+  });
 
-
-
-
-$('#liquorC').change(() => {
-  if ($("#liquorC").is(":checked")) {
-    $.ajax({
-      url: buildURL("https://data.baltimorecity.gov/resource/g2jf-x8pp.geojson", ""),
-      type: "GET",
-      data: {
-        "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
-      }
-    }).done(function (data) {
-      console.log(data)
-      addDataToMap(data, "liquor", "yellow")
-    });
-  } else {
-    removeDataFromMap("liquor");
-  }
-});
-
-
-$("#vacancyR").change(() => {
-  if ($("#vacancyR").is(":checked")) {
-    whichHeat = "vacancy";
-    $.ajax({
-      url: buildURL("https://data.baltimorecity.gov/resource/rw5h-nvv4.geojson", "noticedate"),
-      type: "GET",
-      data: {
-        "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
-      }
-    }).done(addDataToHeat);
-  }
-});
-
-
-$("#demolitionR").change(() => {
-  if ($("#demolitionR").is(":checked")) {
-    whichHeat = "demolition";
-
-    $.ajax({
-      url: buildURL("https://data.baltimorecity.gov/resource/9t78-k3wf.geojson", "dateissue"),
-      type: "GET",
-      data: {
-        "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
-      }
-    }).done(function (data) {
-      var demPermit = { "type": "FeatureCollection", "features": [] }
-      data["features"].forEach((permit) => {
-        if (permit["properties"]["permitnum"].slice(0, 3) == "DEM") {
-          demPermit["features"].push(permit);
-        } else {
-          console.log(permit["properties"]["permitnum"].slice(0, 3))
+  $(`#${key}R`).change(() => {
+    if ($(`#${key}R`).is(":checked")) {
+      whichHeat = key;
+      $.ajax({
+        url: buildURL(value["url"], value["dateKey"]),
+        type: "GET",
+        data: {
+          "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
         }
-      });
-      addDataToHeat(demPermit, "demolition", "brown")
-    });
-  }
-});
-
-
-$("#housePermitR").change(() => {
-  if ($("#housePermitR").is(":checked")) {
-    whichHeat = "housePermit";
-
-    $.ajax({
-      url: buildURL("https://data.baltimorecity.gov/resource/9t78-k3wf.geojson", "dateexpire"),
-      type: "GET",
-      data: {
-        "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
-      }
-    }).done(function (data) {
-      noDemPermit = { "type": "FeatureCollection", "features": [] }
-      data["features"].forEach((permit) => {
-        if (permit["properties"]["permitnum"].slice(0, 3) != "DEM") {
-          noDemPermit["features"].push(permit);
-        } else {
-          console.log(permit["properties"]["permitnum"].slice(0, 3))
+      }).done((data) => {
+        if(value.hasOwnProperty('parseFunc')){
+          data = value["parseFunc"](data, key == "demolition")
         }
+        addDataToHeat(data)
       });
-      addDataToHeat(noDemPermit, "housePermit", "green");
-    });
-  }
-});
-
-
-$("#liquorR").change(() => {
-  if ($("#liquorR").is(":checked")) {
-    whichHeat = "liquor";
-
-    $.ajax({
-      url: buildURL("https://data.baltimorecity.gov/resource/g2jf-x8pp.geojson", ""),
-      type: "GET",
-      data: {
-        "$$app_token": "eBYEhO8U5MV3A40adxqkH4JRq"
-      }
-    }).done(addDataToHeat);
-  }
-});
+    }
+  });
+}
 
 
 $("#noneR").change(() => {
